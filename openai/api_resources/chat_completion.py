@@ -3,11 +3,25 @@ import time
 from openai import util
 from openai.api_resources.abstract.engine_api_resource import EngineAPIResource
 from openai.error import TryAgain
+from openai.util import ApiType
 
 
 class ChatCompletion(EngineAPIResource):
     engine_required = False
     OBJECT_NAME = "chat.completions"
+
+    _azure_preview_version = "2023-03-15-preview"
+
+    @classmethod
+    def _get_api_type_and_version(
+        cls, api_type = None, api_version = None
+    ):
+        api_type, base_api_version = super()._get_api_type_and_version()
+        if api_type in (ApiType.AZURE, ApiType.AZURE_AD):
+            # This override is only temporary: DallE and GPT endpoint versioning is currently out of sync but will be aligned soon.
+            return (api_type, api_version or ChatCompletion._azure_preview_version)
+        else:
+            return (api_type, base_api_version)
 
     @classmethod
     def create(cls, *args, **kwargs):
